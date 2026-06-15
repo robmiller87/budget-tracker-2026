@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 Budget Tracker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .header p {
+      opacity: 0.9;
+      font-size: 0.95rem;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e0e0e0;
+      background: #fafafa;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 1rem;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #666;
+      transition: all 0.3s;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab-btn.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+    }
+
+    .tab-btn:hover {
+      background: #f0f0f0;
+    }
+
+    .content {
+      padding: 2rem;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .section {
+      margin-bottom: 2rem;
+    }
+
+    .section h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+
+    .upload-box {
+      background: #f9f9f9;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      transition: all 0.3s;
+    }
+
+    .upload-box:hover {
+      border-color: #667eea;
+      background: #f5f7ff;
+    }
+
+    .upload-box label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #333;
+      font-size: 0.9rem;
+    }
+
+    .upload-box input[type="file"] {
+      display: block;
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .card-label {
+      font-size: 0.85rem;
+      color: #999;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .card-delta {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .delta-over {
+      color: #e74c3c;
+    }
+
+    .delta-under {
+      color: #27ae60;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: #f0f0f0;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: #333;
+      border-bottom: 2px solid #ddd;
+    }
+
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    tr:hover {
+      background: #fafafa;
+    }
+
+    select {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .category-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .category-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .category-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 1rem;
+      font-size: 0.9rem;
+      padding: 0.75rem 0;
+    }
+
+    .amount {
+      text-align: right;
+      font-weight: 500;
+    }
+
+    .insight-box {
+      background: #f0f7ff;
+      border-left: 4px solid #667eea;
+      border-radius: 6px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    .insight-title {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.5rem;
+    }
+
+    .status {
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+
+    .status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .status.info {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+
+    .api-key-setup {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .api-key-setup h3 {
+      color: #856404;
+      margin-bottom: 0.5rem;
+    }
+
+    .api-key-input {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .api-key-input input {
+      flex: 1;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #999;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.5rem;
+      }
+
+      .tabs {
+        flex-wrap: wrap;
+      }
+
+      .tab-btn {
+        flex: 0 0 50%;
+      }
+
+      .category-header,
+      .category-row {
+        grid-template-columns: 1fr;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>2026 Budget Tracker</h1>
+      <p>Track spending, compare against budget, get AI insights</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('setup')">Setup</button>
+      <button class="tab-btn" onclick="switchTab('import')">Import</button>
+      <button class="tab-btn" onclick="switchTab('categorize')">Categorize</button>
+      <button class="tab-btn" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-btn" onclick="switchTab('insights')">AI Insights</button>
+    </div>
+
+    <div class="content">
+      <!-- Setup Tab -->
+      <div id="setup" class="tab-content active">
+        <div class="section">
+          <h2>API Key Setup</h2>
+          <div class="api-key-setup">
+            <h3>Anthropic API Key</h3>
+            <p>Required for AI insights. Get your key from <a href="https://console.anthropic.com/account/keys" target="_blank">console.anthropic.com</a></p>
+            <div class="api-key-input">
+              <input type="password" id="apiKeyInput" placeholder="sk-ant-..." value="">
+              <button class="btn btn-primary" onclick="saveApiKey()">Save</button>
+              <button class="btn btn-secondary" onclick="clearApiKey()">Clear</button>
+            </div>
+            <div id="apiKeyStatus" style="margin-top: 1rem;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Import Tab -->
+      <div id="import" class="tab-content">
+        <div class="section">
+          <h2>Import Transactions</h2>
+          
+          <div class="upload-box">
+            <label>Revolut CSV Export</label>
+            <input type="file" id="revolutFile" accept=".csv">
+            <small style="color: #999;">Export from Revolut: Accounts > Statements > Download CSV</small>
+          </div>
+
+          <div class="upload-box">
+            <label>BNP Paribas CSV Export</label>
+            <input type="file" id="bnpFile" accept=".csv">
+            <small style="color: #999;">Export from BNP: VIREMENTS ET SERVICES > Téléchargement des opérations > CSV</small>
+          </div>
+
+          <button class="btn btn-primary" onclick="loadTransactions()">Load Transactions</button>
+          <div id="importStatus" style="margin-top: 1rem;"></div>
+        </div>
+      </div>
+
+      <!-- Categorize Tab -->
+      <div id="categorize" class="tab-content">
+        <div class="section">
+          <h2>Categorize Transactions</h2>
+          <p style="margin-bottom: 1rem; color: #666;">Assign each transaction to a budget category. Only categorized transactions count toward your budget.</p>
+          <button class="btn btn-primary" onclick="saveCategorization()">Save & Continue</button>
+          <div id="categorizeContent" style="margin-top: 1.5rem;"></div>
+        </div>
+      </div>
+
+      <!-- Dashboard Tab -->
+      <div id="dashboard" class="tab-content">
+        <div class="section">
+          <h2>Budget Overview</h2>
+          <div id="dashboardContent"></div>
+        </div>
+      </div>
+
+      <!-- Insights Tab -->
+      <div id="insights" class="tab-content">
+        <div class="section">
+          <h2>AI-Powered Insights</h2>
+          <div id="insightsContent"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CATEGORIES = [
+      'Fixed Commitments',
+      'Variable Living',
+      'Health & Recovery',
+      'Relationships & Social',
+      'Work & Leverage',
+      'Optional Joy & Lifestyle',
+      'Travel & Residency'
+    ];
+
+    const BUDGET_2026 = {
+      'January': { monthType: 'Home', 'Fixed Commitments': 3339.17, 'Variable Living': 3200, 'Health & Recovery': 185, 'Relationships & Social': 250, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 140, 'Travel & Residency': 0 },
+      'February': { monthType: 'Travel', 'Fixed Commitments': 3339.17, 'Variable Living': 1900, 'Health & Recovery': 185, 'Relationships & Social': 200, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 120, 'Travel & Residency': 4000 },
+      'March': { monthType: 'Home', 'Fixed Commitments': 3339.17, 'Variable Living': 3200, 'Health & Recovery': 185, 'Relationships & Social': 250, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 140, 'Travel & Residency': 0 },
+      'April': { monthType: 'Home', 'Fixed Commitments': 3339.17, 'Variable Living': 3200, 'Health & Recovery': 185, 'Relationships & Social': 250, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 140, 'Travel & Residency': 0 },
+      'May': { monthType: 'Home', 'Fixed Commitments': 3339.17, 'Variable Living': 3200, 'Health & Recovery': 185, 'Relationships & Social': 250, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 140, 'Travel & Residency': 0 },
+      'June': { monthType: 'Travel', 'Fixed Commitments': 3339.17, 'Variable Living': 1900, 'Health & Recovery': 185, 'Relationships & Social': 200, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 120, 'Travel & Residency': 2200 },
+      'July': { monthType: 'Travel', 'Fixed Commitments': 3339.17, 'Variable Living': 1900, 'Health & Recovery': 185, 'Relationships & Social': 200, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 120, 'Travel & Residency': 2500 },
+      'August': { monthType: 'Travel', 'Fixed Commitments': 3339.17, 'Variable Living': 1900, 'Health & Recovery': 185, 'Relationships & Social': 200, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 120, 'Travel & Residency': 2500 },
+      'September': { monthType: 'Home', 'Fixed Commitments': 3339.17, 'Variable Living': 3200, 'Health & Recovery': 185, 'Relationships & Social': 250, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 140, 'Travel & Residency': 0 },
+      'October': { monthType: 'Home', 'Fixed Commitments': 3339.17, 'Variable Living': 3200, 'Health & Recovery': 185, 'Relationships & Social': 250, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 140, 'Travel & Residency': 0 },
+      'November': { monthType: 'Home', 'Fixed Commitments': 3339.17, 'Variable Living': 3200, 'Health & Recovery': 185, 'Relationships & Social': 250, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 140, 'Travel & Residency': 0 },
+      'December': { monthType: 'Travel', 'Fixed Commitments': 3339.17, 'Variable Living': 1900, 'Health & Recovery': 185, 'Relationships & Social': 200, 'Work & Leverage': 150, 'Optional Joy & Lifestyle': 120, 'Travel & Residency': 2300 }
+    };
+
+    let transactions = [];
+    let categorized = [];
+
+    // Initialize
+    function init() {
+      loadApiKey();
+      loadTransactionsFromStorage();
+      renderCategorizeTab();
+      renderDashboard();
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+
+      if (tabName === 'dashboard') renderDashboard();
+      if (tabName === 'insights') renderInsights();
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('apiKeyInput').value.trim();
+      if (!key) {
+        showStatus('apiKeyStatus', 'Please enter an API key', 'error');
+        return;
+      }
+      localStorage.setItem('anthropic_api_key', key);
+      showStatus('apiKeyStatus', '✓ API key saved', 'success');
+      document.getElementById('apiKeyInput').value = '';
+    }
+
+    function clearApiKey() {
+      localStorage.removeItem('anthropic_api_key');
+      showStatus('apiKeyStatus', '✓ API key cleared', 'success');
+    }
+
+    function loadApiKey() {
+      const key = localStorage.getItem('anthropic_api_key');
+      if (key) {
+        document.getElementById('apiKeyInput').value = key.substring(0, 10) + '...';
+        document.getElementById('apiKeyStatus').innerHTML = '<div class="status success">✓ API key configured</div>';
+      }
+    }
+
+    function parseCSV(text) {
+      const lines = text.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim());
+      const rows = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const obj = {};
+        const values = lines[i].split(',');
+        headers.forEach((h, idx) => {
+          obj[h] = values[idx] ? values[idx].trim() : '';
+        });
+        rows.push(obj);
+      }
+      return rows;
+    }
+
+    function loadTransactions() {
+      transactions = [];
+      const revolutFile = document.getElementById('revolutFile').files[0];
+      const bnpFile = document.getElementById('bnpFile').files[0];
+      const status = document.getElementById('importStatus');
+
+      const readFile = (file) => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const rows = parseCSV(e.target.result);
+            resolve(rows);
+          };
+          reader.readAsText(file);
+        });
+      };
+
+      Promise.all([
+        revolutFile ? readFile(revolutFile) : Promise.resolve([]),
+        bnpFile ? readFile(bnpFile) : Promise.resolve([])
+      ]).then(([revolRows, bnpRows]) => {
+        // Parse Revolut rows
+        revolRows.forEach(row => {
+          const keys = Object.keys(row);
+          const dateStr = row[keys[0]];
+          const desc = row[keys[1]] || '';
+          let amount = 0;
+          for (let k of keys) {
+            const val = parseFloat(row[k]);
+            if (!isNaN(val) && val !== 0) {
+              amount = Math.abs(val);
+              break;
+            }
+          }
+          if (amount && desc) {
+            transactions.push({ date: dateStr, description: desc, amount, source: 'Revolut', category: '' });
+          }
+        });
+
+        // Parse BNP rows
+        bnpRows.forEach(row => {
+          const keys = Object.keys(row);
+          const dateStr = row[keys[0]];
+          const desc = row[keys[1]] || '';
+          let amount = 0;
+          for (let k of keys) {
+            const val = parseFloat(row[k]);
+            if (!isNaN(val) && val !== 0) {
+              amount = Math.abs(val);
+              break;
+            }
+          }
+          if (amount && desc) {
+            transactions.push({ date: dateStr, description: desc, amount, source: 'BNP', category: '' });
+          }
+        });
+
+        saveTransactionsToStorage();
+        categorized = JSON.parse(JSON.stringify(transactions));
+        status.innerHTML = `<div class="status success">✓ Loaded ${transactions.length} transactions</div>`;
+        
+        setTimeout(() => {
+          document.querySelector('button[onclick="switchTab(\'categorize\')"]').click();
+          renderCategorizeTab();
+        }, 500);
+      });
+    }
+
+    function renderCategorizeTab() {
+      const content = document.getElementById('categorizeContent');
+      if (transactions.length === 0) {
+        content.innerHTML = '<div class="status info">No transactions loaded yet. Go to Import tab.</div>';
+        return;
+      }
+
+      let html = '';
+      const byMonth = {};
+      categorized.forEach((t, idx) => {
+        const date = new Date(t.date);
+        const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+        if (!byMonth[month]) byMonth[month] = [];
+        byMonth[month].push({ ...t, idx });
+      });
+
+      Object.entries(byMonth).forEach(([month, items]) => {
+        html += `<div class="category-card">
+          <h3 style="margin-bottom: 1rem;">${month} (${items.length} transactions)</h3>
+          <table>
+            <tr>
+              <th style="width: 100px;">Date</th>
+              <th style="flex: 1;">Description</th>
+              <th style="width: 100px;">Amount</th>
+              <th style="width: 150px;">Category</th>
+            </tr>`;
+        
+        items.forEach(t => {
+          html += `<tr>
+            <td>${t.date}</td>
+            <td title="${t.description}">${t.description.substring(0, 40)}</td>
+            <td class="amount">$${Math.abs(t.amount).toFixed(2)}</td>
+            <td>
+              <select onchange="updateCategory(${t.idx}, this.value)">
+                <option value="">-- Select --</option>
+                ${CATEGORIES.map(c => `<option value="${c}" ${t.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+              </select>
+            </td>
+          </tr>`;
+        });
+        
+        html += `</table></div>`;
+      });
+
+      content.innerHTML = html;
+    }
+
+    function updateCategory(idx, category) {
+      categorized[idx].category = category;
+    }
+
+    function saveCategorization() {
+      transactions = categorized;
+      saveTransactionsToStorage();
+      document.querySelector('button[onclick="switchTab(\'dashboard\')"]').click();
+    }
+
+    function renderDashboard() {
+      const content = document.getElementById('dashboardContent');
+      if (transactions.length === 0) {
+        content.innerHTML = '<div class="status info">No transactions loaded. Go to Import tab.</div>';
+        return;
+      }
+
+      const categorized = transactions.filter(t => t.category);
+      const byCategory = {};
+      
+      CATEGORIES.forEach(cat => {
+        byCategory[cat] = {
+          spent: categorized.filter(t => t.category === cat).reduce((s, t) => s + Math.abs(t.amount), 0),
+          budgeted: Object.values(BUDGET_2026).reduce((s, month) => s + (month[cat] || 0), 0)
+        };
+      });
+
+      const totalSpent = Object.values(byCategory).reduce((s, d) => s + d.spent, 0);
+      const totalBudgeted = Object.values(byCategory).reduce((s, d) => s + d.budgeted, 0);
+      const delta = totalSpent - totalBudgeted;
+
+      let html = `<div class="grid">
+        <div class="card">
+          <div class="card-label">Total Spent</div>
+          <div class="card-value">$${Math.round(totalSpent)}</div>
+          <div class="card-delta">${categorized.length} transactions</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Total Budgeted</div>
+          <div class="card-value">$${Math.round(totalBudgeted)}</div>
+          <div class="card-delta">Full year</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Overall Status</div>
+          <div class="card-value" style="color: ${delta > 0 ? '#e74c3c' : '#27ae60'};">${delta > 0 ? 'Over' : 'Under'}</div>
+          <div class="card-delta ${delta > 0 ? 'delta-over' : 'delta-under'}">$${Math.abs(Math.round(delta))} ${delta > 0 ? 'over' : 'under'}</div>
+        </div>
+      </div>`;
+
+      html += `<h3 style="margin-top: 2rem; margin-bottom: 1rem;">By Category</h3>`;
+      
+      CATEGORIES.forEach(cat => {
+        const spent = byCategory[cat].spent;
+        const budgeted = byCategory[cat].budgeted;
+        const catDelta = spent - budgeted;
+        const percent = budgeted > 0 ? Math.round((spent / budgeted) * 100) : 0;
+
+        html += `<div class="category-card">
+          <div class="category-header">
+            <div>${cat}</div>
+            <div style="text-align: right;">Spent</div>
+            <div style="text-align: right;">Budget</div>
+            <div style="text-align: right;">Delta</div>
+          </div>
+          <div class="category-row">
+            <div>${percent}% of budget</div>
+            <div class="amount">$${Math.round(spent)}</div>
+            <div class="amount">$${Math.round(budgeted)}</div>
+            <div class="amount" style="color: ${catDelta > 0 ? '#e74c3c' : '#27ae60'};">
+              ${catDelta > 0 ? '+' : ''}$${Math.round(catDelta)}
+            </div>
+          </div>
+        </div>`;
+      });
+
+      content.innerHTML = html;
+    }
+
+    function renderInsights() {
+      const content = document.getElementById('insightsContent');
+      const apiKey = localStorage.getItem('anthropic_api_key');
+
+      if (!apiKey) {
+        content.innerHTML = '<div class="status error">API key not configured. Go to Setup tab.</div>';
+        return;
+      }
+
+      const categorized = transactions.filter(t => t.category);
+      const byCategory = {};
+      
+      CATEGORIES.forEach(cat => {
+        byCategory[cat] = {
+          spent: categorized.filter(t => t.category === cat).reduce((s, t) => s + Math.abs(t.amount), 0),
+          count: categorized.filter(t => t.category === cat).length,
+          budgeted: Object.values(BUDGET_2026).reduce((s, month) => s + (month[cat] || 0), 0)
+        };
+      });
+
+      const totalSpent = Object.values(byCategory).reduce((s, d) => s + d.spent, 0);
+      const totalBudgeted = Object.values(byCategory).reduce((s, d) => s + d.budgeted, 0);
+
+      content.innerHTML = '<div class="loading"><div class="spinner"></div>Generating insights...</div>';
+
+      const prompt = `Robert's 2026 budget tracking data:
+- Total spent so far: $${Math.round(totalSpent)}
+- Full year budget: $${Math.round(totalBudgeted)}
+- Spending by category:
+${CATEGORIES.map(cat => {
+  const d = byCategory[cat];
+  const pct = d.budgeted > 0 ? Math.round((d.spent / d.budgeted) * 100) : 0;
+  return `  ${cat}: $${Math.round(d.spent)} spent vs $${Math.round(d.budgeted)} budgeted (${pct}% of budget, ${d.count} transactions)`;
+}).join('\n')}
+
+Provide concise, actionable insights on:
+1. Which categories are significantly over/under budget
+2. Notable spending patterns
+3. 1-2 specific recommendations
+
+Keep analysis brief and focused. Use dollar amounts, not percentages.`;
+
+      fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-opus-4-6',
+          max_tokens: 600,
+          messages: [{ role: 'user', content: prompt }]
+        })
+      }).then(r => r.json()).then(data => {
+        if (data.error) {
+          content.innerHTML = `<div class="status error">Error: ${data.error.message}</div>`;
+        } else {
+          const insight = data.content[0]?.text || 'Unable to generate insights';
+          content.innerHTML = `<div class="insight-box">
+            ${insight.split('\n').map(line => `<p>${line}</p>`).join('')}
+          </div>`;
+        }
+      }).catch(err => {
+        content.innerHTML = `<div class="status error">Error: ${err.message}</div>`;
+      });
+    }
+
+    function showStatus(elementId, message, type) {
+      const el = document.getElementById(elementId);
+      el.innerHTML = `<div class="status ${type}">${message}</div>`;
+    }
+
+    function saveTransactionsToStorage() {
+      localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+
+    function loadTransactionsFromStorage() {
+      const stored = localStorage.getItem('transactions');
+      if (stored) {
+        transactions = JSON.parse(stored);
+        categorized = JSON.parse(JSON.stringify(transactions));
+      }
+    }
+
+    // Initialize on load
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>
