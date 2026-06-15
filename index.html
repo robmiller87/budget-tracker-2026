@@ -412,9 +412,9 @@
           </div>
 
           <div class="upload-box">
-            <label>BNP Paribas CSV Export</label>
-            <input type="file" id="bnpFile" accept=".csv">
-            <small style="color: #999;">Export from BNP: VIREMENTS ET SERVICES > Téléchargement des opérations > CSV</small>
+            <label>BNP Paribas Excel Export (.xls)</label>
+            <input type="file" id="bnpFile" accept=".xls,.xlsx">
+            <small style="color: #999;">Export from BNP app: Télécharger vos relevés d'opération (Excel format)</small>
           </div>
 
           <button class="btn btn-primary" onclick="loadTransactions()">Load Transactions</button>
@@ -450,6 +450,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
   <script>
     const CATEGORIES = [
       'Fixed Commitments',
@@ -544,7 +545,7 @@
       const bnpFile = document.getElementById('bnpFile').files[0];
       const status = document.getElementById('importStatus');
 
-      const readFile = (file) => {
+      const readCSVFile = (file) => {
         return new Promise((resolve) => {
           const reader = new FileReader();
           reader.onload = (e) => {
@@ -555,18 +556,32 @@
         });
       };
 
+      const readExcelFile = (file) => {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+            resolve(rows);
+          };
+          reader.readAsArrayBuffer(file);
+        });
+      };
+
       Promise.all([
-        revolutFile ? readFile(revolutFile) : Promise.resolve([]),
-        bnpFile ? readFile(bnpFile) : Promise.resolve([])
+        revolutFile ? readCSVFile(revolutFile) : Promise.resolve([]),
+        bnpFile ? readExcelFile(bnpFile) : Promise.resolve([])
       ]).then(([revolRows, bnpRows]) => {
-        // Parse Revolut rows
-        revolRows.forEach(row => {
-          const keys = Object.keys(row);
-          const dateStr = row[keys[0]];
-          const desc = row[keys[1]] || '';
+        // Parse Revolut CSV rows
+        revolRows.forEach((row, idx) => {
+          if (idx === 0 || !row || row.length < 2) return;
+          const dateStr = row[0];
+          const desc = row[1] || '';
           let amount = 0;
-          for (let k of keys) {
-            const val = parseFloat(row[k]);
+          for (let i = 2; i < row.length; i++) {
+            const val = parseFloat(row[i]);
             if (!isNaN(val) && val !== 0) {
               amount = Math.abs(val);
               break;
@@ -577,23 +592,29 @@
           }
         });
 
-        // Parse BNP rows
-        bnpRows.forEach(row => {
-          const keys = Object.keys(row);
-          const dateStr = row[keys[0]];
-          const desc = row[keys[1]] || '';
-          let amount = 0;
-          for (let k of keys) {
-            const val = parseFloat(row[k]);
-            if (!isNaN(val) && val !== 0) {
-              amount = Math.abs(val);
-              break;
+        // Parse BNP Excel rows (skip metadata, find header row)
+        let headerIdx = -1;
+        for (let i = 0; i < bnpRows.length; i++) {
+          if (bnpRows[i][0] === 'Date operation') {
+            headerIdx = i;
+            break;
+          }
+        }
+
+        if (headerIdx >= 0) {
+          for (let i = headerIdx + 1; i < bnpRows.length; i++) {
+            const row = bnpRows[i];
+            if (!row || row.length < 5 || !row[0]) continue;
+            
+            const dateStr = row[0]; // DD-MM-YYYY format
+            const desc = row[3] || ''; // Libelle operation
+            const amount = Math.abs(row[4] || 0); // Montant operation
+            
+            if (amount && desc) {
+              transactions.push({ date: dateStr, description: desc, amount, source: 'BNP', category: '' });
             }
           }
-          if (amount && desc) {
-            transactions.push({ date: dateStr, description: desc, amount, source: 'BNP', category: '' });
-          }
-        });
+        }
 
         saveTransactionsToStorage();
         categorized = JSON.parse(JSON.stringify(transactions));
@@ -603,6 +624,8 @@
           document.querySelector('button[onclick="switchTab(\'categorize\')"]').click();
           renderCategorizeTab();
         }, 500);
+      }).catch(err => {
+        status.innerHTML = `<div class="status error">Error: ${err.message}</div>`;
       });
     }
 
@@ -616,7 +639,26 @@
       let html = '';
       const byMonth = {};
       categorized.forEach((t, idx) => {
-        const date = new Date(t.date);
+        // Parse date - handle both DD-MM-YYYY (BNP) and other formats
+        let date;
+        if (t.date.includes('-') && t.date.split('-')[2].length === 4) {
+          // DD-MM-YYYY format (BNP)
+          const parts = t.date.split('-');
+          date = new Date(parts[2], parts[1] - 1, parts[0]);
+        } else if (t.date.includes('/')) {
+          // MM/DD/YYYY or DD/MM/YYYY (Revolut)
+          const parts = t.date.split('/');
+          if (parseInt(parts[0]) > 12) {
+            // DD/MM/YYYY
+            date = new Date(parts[2], parts[1] - 1, parts[0]);
+          } else {
+            // MM/DD/YYYY
+            date = new Date(parts[2], parts[0] - 1, parts[1]);
+          }
+        } else {
+          date = new Date(t.date);
+        }
+        
         const month = date.toLocaleString('default', { month: 'long', year: 'numeric' });
         if (!byMonth[month]) byMonth[month] = [];
         byMonth[month].push({ ...t, idx });
